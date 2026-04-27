@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional CNIC Generator Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Roboto:wght@400;700&family=Arimo:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #004d33;
+            --accent: #d4af37;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        .urdu-font {
+            font-family: 'Noto Nastaliq Urdu', serif;
+            line-height: 1.8;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            background-color: #1e293b;
+            cursor: move;
+        }
+        .form-input {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 0.4rem;
+            border-radius: 4px;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .form-input:focus {
+            outline: 2px solid var(--primary);
+            border-color: transparent;
+        }
+        label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 0.15rem;
+            display: block;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+        .control-panel {
+            height: calc(100vh - 120px);
+        }
+        .tab-btn.active {
+            background-color: #059669;
+            color: white;
+        }
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+            .print-container { padding: 0; margin: 0; }
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="max-w-[1400px] mx-auto">
+        <header class="flex items-center justify-between mb-4 no-print">
+            <div class="flex items-center gap-4">
+                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <span class="text-green-500">PK</span> ID-Studio
+                </h1>
+                <div class="flex bg-slate-800 rounded-lg p-1">
+                    <button id="tabFront" onclick="switchSide('front')" class="tab-btn active px-4 py-1 rounded-md text-xs font-bold transition">FRONT SIDE</button>
+                    <button id="tabBack" onclick="switchSide('back')" class="tab-btn px-4 py-1 rounded-md text-xs font-bold transition text-slate-400">BACK SIDE</button>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="resetPositions()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded transition text-xs">Reset Layout</button>
+                <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded transition text-xs">Print PDF</button>
+                <button onclick="downloadCard()" class="bg-green-700 hover:bg-green-600 px-4 py-2 rounded transition text-xs font-bold">Export High-Res PNG</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Controls -->
+            <div class="lg:col-span-3 space-y-4 no-print control-panel overflow-y-auto custom-scroll pr-2">
+                
+                <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <h2 class="text-sm font-semibold mb-3 flex items-center gap-2 text-green-400 uppercase tracking-wider">
+                        <span>🎴</span> Assets
+                    </h2>
+                    <label id="bgLabel">Front Template (cnic.jpg)</label>
+                    <input type="file" id="bgInput" accept="image/*" class="form-input">
+                    
+                    <div id="frontAssetsOnly">
+                        <label>Holder Photo</label>
+                        <input type="file" id="photoInput" accept="image/*" class="form-input">
+                        <label>Signature (Transparent PNG)</label>
+                        <input type="file" id="sigInput" accept="image/*" class="form-input">
+                    </div>
+                </section>
+
+                <!-- Front Information -->
+                <section id="frontInfo" class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <h2 class="text-sm font-semibold mb-3 text-green-400 uppercase tracking-wider">📝 Front Details</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="nameUrdu" value="صابر خان" dir="rtl" class="form-input urdu-font text-lg" placeholder="نام">
+                        <input type="text" id="nameEng" value="SABIR KHAN" class="form-input" placeholder="Name">
+                        <input type="text" id="fatherUrdu" value="شاہی باغ خان" dir="rtl" class="form-input urdu-font text-lg" placeholder="والد کا نام">
+                        <input type="text" id="fatherEng" value="SHAHI BAGH KHAN" class="form-input" placeholder="Father's Name">
+                        <input type="text" id="cnicNum" value="21201-0958040-1" class="form-input" placeholder="CNIC Number">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div><label>DOB</label><input type="text" id="dob" value="06.03.1996" class="form-input"></div>
+                            <div><label>Issue</label><input type="text" id="issue" value="18.05.2018" class="form-input"></div>
+                            <div><label>Expiry</label><input type="text" id="expiry" value="18.05.2028" class="form-input"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Back Information -->
+                <section id="backInfo" class="hidden bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <h2 class="text-sm font-semibold mb-3 text-green-400 uppercase tracking-wider">🏠 Back Details</h2>
+                    <div class="space-y-3">
+                        <label>Present Address (Urdu)</label>
+                        <textarea id="presentAddr" dir="rtl" class="form-input urdu-font h-20 text-sm">مکان نمبر ۱۲، گلی نمبر ۵، شاہی باغ، پشاور، خیبر پختونخوا</textarea>
+                        
+                        <label>Permanent Address (Urdu)</label>
+                        <textarea id="permanentAddr" dir="rtl" class="form-input urdu-font h-20 text-sm">مکان نمبر ۱۲، گلی نمبر ۵، شاہی باغ، پشاور، خیبر پختونخوا</textarea>
+                        
+                        <input type="text" id="familyNo" value="A-1234567" class="form-input" placeholder="Family Number">
+                    </div>
+                </section>
+
+                <section class="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                    <h2 class="text-sm font-semibold mb-2 text-green-400 uppercase tracking-wider">Adjustment</h2>
+                    <div id="textControls" class="hidden space-y-3 mb-4 p-2 bg-slate-900/50 rounded-lg border border-blue-500/30">
+                        <div class="flex justify-between items-center">
+                            <label>Size:</label>
+                            <span id="activeSizeVal" class="text-white bg-slate-700 px-2 rounded">20</span>
+                        </div>
+                        <input type="range" id="activeSizeRange" min="5" max="100" step="1" class="w-full" oninput="updateActiveElementSize(this.value)">
+                    </div>
+                    
+                    <label>Master Template Opacity: <span id="opVal">1.0</span></label>
+                    <input type="range" id="opacity" min="0.1" max="1" step="0.1" value="1" class="w-full mb-3" oninput="draw()">
+                </section>
+            </div>
+
+            <!-- Right: Interactive Canvas -->
+            <div class="lg:col-span-9 flex flex-col items-center">
+                <div class="relative group">
+                    <canvas id="cnicCanvas"></canvas>
+                    <div class="absolute top-2 left-2 bg-black/70 text-[10px] text-white px-2 py-1 rounded">
+                        <span id="coordDisplay">X: 0 Y: 0</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 w-full max-w-2xl bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
+                    <h3 class="text-sm font-bold text-slate-300 mb-2">Editor Controls</h3>
+                    <ul class="text-xs text-slate-400 space-y-1 list-disc pl-4">
+                        <li>Switch between <strong>Front</strong> and <strong>Back</strong> sides using the tabs.</li>
+                        <li>Click and drag any element on the card to reposition it.</li>
+                        <li>Select an element to unlock the <strong>Size Adjustment</strong> slider.</li>
+                        <li>Addresses on the back are multi-line enabled for long Urdu text.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('cnicCanvas');
+        const ctx = canvas.getContext('2d');
+        const CANVAS_WIDTH = 1011;
+        const CANVAS_HEIGHT = 639;
+
+        let currentSide = 'front';
+        let bgImgFront = new Image();
+        let bgImgBack = new Image();
+        let holderPhoto = new Image();
+        let sigImg = new Image();
+        
+        let isFrontLoaded = false;
+        let isBackLoaded = false;
+        let isPhotoLoaded = false;
+        let isSigLoaded = false;
+
+        // Elements state
+        let elements = {
+            front: [
+                { id: 'nameUrdu', x: 500, y: 265, type: 'text', size: 28, fontName: '"Noto Nastaliq Urdu"', align: 'right' },
+                { id: 'nameEng', x: 295, y: 295, type: 'text', size: 22, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'left' },
+                { id: 'fatherUrdu', x: 500, y: 405, type: 'text', size: 24, fontName: '"Noto Nastaliq Urdu"', align: 'right' },
+                { id: 'fatherEng', x: 295, y: 435, type: 'text', size: 19, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'left' },
+                { id: 'gender', x: 305, y: 520, type: 'text', size: 18, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'left' },
+                { id: 'country', x: 405, y: 520, type: 'text', size: 18, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'left' },
+                { id: 'cnicNum', x: 295, y: 575, type: 'text', size: 32, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'left', color: '#000' },
+                { id: 'dob', x: 532, y: 575, type: 'text', size: 18, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'left' },
+                { id: 'issue', x: 295, y: 610, type: 'text', size: 17, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'left' },
+                { id: 'expiry', x: 532, y: 610, type: 'text', size: 17, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'left' },
+                { id: 'mainPhoto', x: 732, y: 155, w: 188, h: 230, type: 'image' },
+                { id: 'ghostPhoto', x: 610, y: 440, w: 100, h: 125, type: 'image', opacity: 0.35 },
+                { id: 'signature', x: 740, y: 495, w: 150, h: 60, type: 'image', asset: 'sig' }
+            ],
+            back: [
+                { id: 'presentAddr', x: 915, y: 220, type: 'multiline', size: 20, fontName: '"Noto Nastaliq Urdu"', align: 'right', width: 600 },
+                { id: 'permanentAddr', x: 915, y: 350, type: 'multiline', size: 20, fontName: '"Noto Nastaliq Urdu"', align: 'right', width: 600 },
+                { id: 'familyNo', x: 540, y: 560, type: 'text', size: 22, fontName: '"Arimo", sans-serif', weight: 'bold', align: 'center' },
+                { id: 'backBarcode', x: 300, y: 80, w: 400, h: 80, type: 'placeholder', label: 'BARCODE AREA' },
+                { id: 'backQR', x: 780, y: 420, w: 150, h: 150, type: 'placeholder', label: 'QR AREA' }
+            ]
+        };
+
+        let draggingElement = null;
+        let selectedElement = null;
+        let offset = { x: 0, y: 0 };
+
+        function init() {
+            canvas.width = CANVAS_WIDTH;
+            canvas.height = CANVAS_HEIGHT;
+            
+            // Auto-load front template
+            bgImgFront.crossOrigin = "anonymous";
+            bgImgFront.onload = () => { isFrontLoaded = true; draw(); };
+            bgImgFront.src = 'cnic.jpg?v=' + Date.now();
+
+            setupInteractions();
+            attachFileHandlers();
+            
+            document.querySelectorAll('.form-input, textarea').forEach(input => {
+                input.addEventListener('input', draw);
+            });
+            draw();
+        }
+
+        function switchSide(side) {
+            currentSide = side;
+            document.getElementById('tabFront').className = `tab-btn px-4 py-1 rounded-md text-xs font-bold transition ${side === 'front' ? 'active text-white' : 'text-slate-400'}`;
+            document.getElementById('tabBack').className = `tab-btn px-4 py-1 rounded-md text-xs font-bold transition ${side === 'back' ? 'active text-white' : 'text-slate-400'}`;
+            
+            document.getElementById('frontInfo').classList.toggle('hidden', side !== 'front');
+            document.getElementById('backInfo').classList.toggle('hidden', side !== 'back');
+            document.getElementById('frontAssetsOnly').classList.toggle('hidden', side !== 'front');
+            document.getElementById('bgLabel').innerText = side === 'front' ? 'Front Template (cnic.jpg)' : 'Back Template Image';
+            
+            selectedElement = null;
+            hideActiveControls();
+            draw();
+        }
+
+        function setupInteractions() {
+            canvas.addEventListener('mousedown', e => {
+                const pos = getMousePos(e);
+                let hitAny = false;
+                const currentElements = elements[currentSide];
+
+                for (let i = currentElements.length - 1; i >= 0; i--) {
+                    const el = currentElements[i];
+                    let hit = false;
+                    
+                    if (el.type === 'text' || el.type === 'multiline') {
+                        const width = el.width || 300; 
+                        const height = el.size + 20;
+                        if (pos.x >= el.x - (el.align==='right'?width:width/2) && pos.x <= el.x + (el.align==='left'?width:width/2) && 
+                            pos.y >= el.y - height && pos.y <= el.y + 10) hit = true;
+                    } else {
+                        if (pos.x >= el.x && pos.x <= el.x + el.w && pos.y >= el.y && pos.y <= el.y + el.h) hit = true;
+                    }
+
+                    if (hit) {
+                        draggingElement = el;
+                        selectedElement = el;
+                        offset.x = pos.x - el.x;
+                        offset.y = pos.y - el.y;
+                        canvas.style.cursor = 'grabbing';
+                        showActiveControls(el);
+                        hitAny = true;
+                        break;
+                    }
+                }
+                
+                if(!hitAny) {
+                    selectedElement = null;
+                    hideActiveControls();
+                }
+                draw();
+            });
+
+            window.addEventListener('mousemove', e => {
+                const pos = getMousePos(e);
+                const display = document.getElementById('coordDisplay');
+                if (display) display.innerText = `X: ${Math.round(pos.x)} Y: ${Math.round(pos.y)}`;
+                
+                if (draggingElement) {
+                    draggingElement.x = pos.x - offset.x;
+                    draggingElement.y = pos.y - offset.y;
+                    draw();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                draggingElement = null;
+                canvas.style.cursor = 'move';
+            });
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * (canvas.width / rect.width),
+                y: (e.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function showActiveControls(el) {
+            const ctrl = document.getElementById('textControls');
+            const range = document.getElementById('activeSizeRange');
+            const valDisplay = document.getElementById('activeSizeVal');
+
+            if (ctrl) ctrl.classList.remove('hidden');
+            if (range) {
+                range.value = el.size || el.w;
+                range.min = 5;
+                range.max = el.type === 'text' ? 100 : 800;
+            }
+            if (valDisplay) valDisplay.innerText = el.size || el.w;
+        }
+
+        function hideActiveControls() {
+            const ctrl = document.getElementById('textControls');
+            if (ctrl) ctrl.classList.add('hidden');
+        }
+
+        function updateActiveElementSize(val) {
+            if(!selectedElement) return;
+            if(selectedElement.type === 'text' || selectedElement.type === 'multiline') {
+                selectedElement.size = parseInt(val);
+            } else {
+                const ratio = selectedElement.h / selectedElement.w;
+                selectedElement.w = parseInt(val);
+                selectedElement.h = selectedElement.w * ratio;
+            }
+            document.getElementById('activeSizeVal').innerText = val;
+            draw();
+        }
+
+        function attachFileHandlers() {
+            document.getElementById('bgInput').onchange = e => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const img = new Image();
+                    img.onload = () => { 
+                        if(currentSide === 'front') { bgImgFront = img; isFrontLoaded = true; }
+                        else { bgImgBack = img; isBackLoaded = true; }
+                        draw(); 
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            };
+
+            document.getElementById('photoInput').onchange = e => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    holderPhoto.onload = () => { isPhotoLoaded = true; draw(); };
+                    holderPhoto.src = ev.target.result;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            };
+
+            document.getElementById('sigInput').onchange = e => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    sigImg.onload = () => { isSigLoaded = true; draw(); };
+                    sigImg.src = ev.target.result;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            };
+        }
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n] + ' ';
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, y);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            
+            // Draw Background
+            const currentBg = currentSide === 'front' ? bgImgFront : bgImgBack;
+            const isLoaded = currentSide === 'front' ? isFrontLoaded : isBackLoaded;
+
+            if (isLoaded) {
+                ctx.drawImage(currentBg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            } else {
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'center';
+                ctx.font = '20px Roboto';
+                ctx.fillText(`${currentSide.toUpperCase()} SIDE - Upload Template`, CANVAS_WIDTH/2, CANVAS_HEIGHT/2);
+            }
+
+            ctx.globalAlpha = document.getElementById('opacity').value;
+
+            elements[currentSide].forEach(el => {
+                ctx.save();
+                if (el.type === 'text' || el.type === 'multiline') {
+                    const input = document.getElementById(el.id);
+                    const val = input ? input.value : "";
+                    ctx.fillStyle = el.color || '#111'; 
+                    ctx.font = `${el.weight || ''} ${el.size}px ${el.fontName}`;
+                    ctx.textAlign = el.align;
+                    
+                    if(el.type === 'multiline') {
+                        wrapText(ctx, val, el.x, el.y, el.width, el.size * 1.5);
+                    } else {
+                        ctx.fillText(val, el.x, el.y);
+                    }
+
+                    if(selectedElement === el) {
+                        ctx.strokeStyle = '#22c55e';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([5, 5]);
+                        const w = el.width || 250;
+                        ctx.strokeRect(el.x - (el.align==='right'?w:w/2), el.y - el.size - 5, w, el.size + 15);
+                    }
+                } else if (el.type === 'image') {
+                    if (el.asset === 'sig' && isSigLoaded) {
+                        ctx.drawImage(sigImg, el.x, el.y, el.w, el.h);
+                    } else if (!el.asset && isPhotoLoaded) {
+                        ctx.save();
+                        if(document.getElementById('autoBw').checked) ctx.filter = 'grayscale(100%) contrast(1.1)';
+                        ctx.drawImage(holderPhoto, el.x, el.y, el.w, el.h);
+                        ctx.restore();
+                    }
+                    if(selectedElement === el) { ctx.strokeStyle = '#22c55e'; ctx.strokeRect(el.x, el.y, el.w, el.h); }
+                } else if (el.type === 'placeholder') {
+                    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                    ctx.fillRect(el.x, el.y, el.w, el.h);
+                    ctx.strokeStyle = '#999';
+                    ctx.strokeRect(el.x, el.y, el.w, el.h);
+                    ctx.fillStyle = '#666';
+                    ctx.font = '12px Roboto';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(el.label, el.x + el.w/2, el.y + el.h/2);
+                    if(selectedElement === el) { ctx.strokeStyle = '#22c55e'; ctx.strokeRect(el.x, el.y, el.w, el.h); }
+                }
+                ctx.restore();
+            });
+        }
+
+        function resetPositions() {
+            location.reload();
+        }
+
+        function downloadCard() {
+            selectedElement = null;
+            draw();
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.download = `CNIC_${currentSide}_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+            }, 50);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
