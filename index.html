@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jawad Pak Id Studio | Pro Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Roboto:wght@400;700&family=Arimo:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #10b981; }
+        body { font-family: 'Roboto', sans-serif; background-color: #0f172a; color: #e2e8f0; margin: 0; overflow-x: hidden; }
+        .urdu-font { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.2; }
+        canvas { max-width: 100%; height: auto; border-radius: 12px; background-color: #1e293b; box-shadow: 0 20px 50px rgba(0,0,0,0.5); cursor: crosshair; }
+        .form-input { background: #1e293b; border: 1px solid #334155; padding: 0.5rem; border-radius: 6px; width: 100%; color: white; font-size: 0.85rem; transition: 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--primary); }
+        label { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.2rem; display: block; }
+        .tab-btn.active { background-color: var(--primary); color: white; }
+        .card-panel { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.05); }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        
+        /* Marquee Styles */
+        .marquee-container { background: #064e3b; color: #10b981; padding: 10px 0; font-weight: 900; font-size: 0.8rem; letter-spacing: 1px; border-bottom: 1px solid #065f46; }
+        
+        /* Login Screen Overlay */
+        #loginOverlay { position: fixed; inset: 0; z-index: 100; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Login Screen -->
+    <div id="loginOverlay">
+        <div class="marquee-container w-full absolute top-0 overflow-hidden">
+            <marquee scrollamount="8">CREATED BY: RAJA ANZAR JAWAD | PHONE: 03135523555 | WELCOME TO JAWAD PAK ID STUDIO PROFESSIONAL SUITE</marquee>
+        </div>
+        
+        <div class="card-panel p-8 rounded-3xl w-full max-w-md border border-slate-700 shadow-2xl text-center">
+            <h1 class="text-3xl font-black text-white mb-2 tracking-tighter">JAWAD PAK ID STUDIO</h1>
+            <p class="text-slate-500 text-xs mb-8 uppercase font-bold tracking-widest">Authorized Access Only</p>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label>Access Key</label>
+                    <input type="password" id="passKey" placeholder="Enter Password" class="form-input text-center py-3 text-lg tracking-[0.5em]">
+                </div>
+                <button onclick="checkLogin()" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-green-900/20 active:scale-95">LOGIN TO STUDIO</button>
+                <p id="loginError" class="text-red-500 text-[10px] text-center font-bold hidden uppercase">Invalid Access Key Provided</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App UI (Hidden initially) -->
+    <div id="mainApp" class="hidden p-4">
+        <div class="max-w-[1500px] mx-auto">
+            <header class="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+                <div class="flex items-center gap-6">
+                    <h1 class="text-2xl font-black text-white tracking-tighter">JAWAD PAK ID STUDIO <span class="text-green-500">v2.6</span></h1>
+                    <div class="flex bg-slate-800 rounded-xl p-1 shadow-lg">
+                        <button id="tabFront" onclick="switchSide('front')" class="tab-btn active px-6 py-2 rounded-lg text-xs font-bold transition-all">FRONT SIDE</button>
+                        <button id="tabBack" onclick="switchSide('back')" class="tab-btn px-6 py-2 rounded-lg text-xs font-bold transition-all text-slate-400">BACK SIDE</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="autoLoadStatus" class="text-[10px] font-bold text-slate-500 bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">Checking local templates...</span>
+                    <button onclick="downloadCard()" class="bg-green-600 hover:bg-green-500 px-8 py-3 rounded-xl transition-all text-xs font-black shadow-lg">DOWNLOAD HQ PNG</button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Sidebar -->
+                <div class="lg:col-span-3 space-y-4 max-h-[85vh] overflow-y-auto pr-2 custom-scroll">
+                    <section class="card-panel p-4 rounded-xl">
+                        <label class="text-green-500 mb-4">Media Assets</label>
+                        <div class="space-y-3">
+                            <div><label>Manual Template Upload</label><input type="file" id="bgInput" class="form-input text-xs"></div>
+                            <div><label>Holder Photo</label><input type="file" id="photoInput" class="form-input text-xs"></div>
+                            <div><label>Holder Signature</label><input type="file" id="sigInput" class="form-input text-xs"></div>
+                            <div><label>Chairman Signature</label><input type="file" id="chairSigInput" class="form-input text-xs"></div>
+                        </div>
+                    </section>
+
+                    <div id="frontInfo" class="card-panel p-4 rounded-xl space-y-3">
+                        <label class="text-green-500">Front Details</label>
+                        <div><label>Name (Urdu)</label><input type="text" id="nameUrdu" value="صابر خان" dir="rtl" class="form-input urdu-font text-lg"></div>
+                        <div><label>Name (English)</label><input type="text" id="nameEng" value="SABIR KHAN" class="form-input font-bold uppercase"></div>
+                        <div><label>Father Name (Urdu)</label><input type="text" id="fatherUrdu" value="شاہی باغ خان" dir="rtl" class="form-input urdu-font text-lg"></div>
+                        <div><label>Father Name (English)</label><input type="text" id="fatherEng" value="SHAHI BAGH KHAN" class="form-input font-bold uppercase"></div>
+                        <div><label>CNIC Number</label><input type="text" id="cnicNum" value="21201-0958040-1" class="form-input font-mono" oninput="syncCnic()"></div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div><label>DOB</label><input type="text" id="dob" value="06.03.1996" class="form-input text-[10px]"></div>
+                            <div><label>Issue</label><input type="text" id="issue" value="18.05.2018" class="form-input text-[10px]"></div>
+                            <div><label>Expiry</label><input type="text" id="expiry" value="18.05.2028" class="form-input text-[10px]"></div>
+                        </div>
+                    </div>
+
+                    <div id="backInfo" class="hidden card-panel p-4 rounded-xl space-y-3">
+                        <label class="text-green-500">Back Details</label>
+                        <div><label>Serial Number</label><input type="text" id="serialNum" value="1054328901" class="form-input font-bold"></div>
+                        <div><label>CNIC (Display)</label><input type="text" id="cnicNumBack" value="21201-0958040-1" class="form-input font-bold text-center"></div>
+                        <div><label>Present Address (Urdu)</label><textarea id="presentAddr" dir="rtl" class="form-input urdu-font text-sm h-20">مکان نمبر ۱۲، گلی نمبر ۵، شاہی باغ، پشاور، خیبر پختونخوا</textarea></div>
+                        <div><label>Permanent Address (Urdu)</label><textarea id="permanentAddr" dir="rtl" class="form-input urdu-font text-sm h-20">مکان نمبر ۱۲، گلی نمبر ۵، شاہی باغ، پشاور، خیبر پختونخوا</textarea></div>
+                    </div>
+                </div>
+
+                <!-- Canvas Area -->
+                <div class="lg:col-span-9 flex flex-col items-center">
+                    <div class="p-2 bg-slate-800 rounded-2xl border border-slate-700">
+                        <canvas id="cnicCanvas"></canvas>
+                    </div>
+
+                    <div id="textControls" class="opacity-0 pointer-events-none transition-all mt-6 w-full max-w-xl card-panel p-5 rounded-2xl border-l-4 border-green-500">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <p id="activeElName" class="text-[10px] font-black text-green-500 uppercase">Selected</p>
+                                <div class="flex items-center gap-4 mt-2">
+                                    <input type="range" id="activeSizeRange" min="5" max="600" class="accent-green-500 flex-1" oninput="updateSize(this.value)">
+                                    <input type="number" id="activeSizeNum" class="w-20 bg-slate-900 border border-slate-700 rounded p-1 text-center font-bold text-white" oninput="updateSize(this.value)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LOGIN LOGIC
+        function checkLogin() {
+            const pass = document.getElementById('passKey').value;
+            const error = document.getElementById('loginError');
+            
+            if(pass === "admin123") { // DEFAULT PASSWORD
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').classList.remove('hidden');
+                init(); // Start the app logic
+            } else {
+                error.classList.remove('hidden');
+                setTimeout(() => error.classList.add('hidden'), 3000);
+            }
+        }
+
+        // APP LOGIC
+        const canvas = document.getElementById('cnicCanvas');
+        const ctx = canvas.getContext('2d');
+        const CW = 1011, CH = 639;
+
+        let currentSide = 'front';
+        let images = { bgFront: null, bgBack: null, photo: null, sig: null, chairSig: null };
+        let state = { dragging: null, selected: null, offset: { x: 0, y: 0 }, needsRedraw: true };
+
+        const elements = {
+            front: [
+                { id: 'nameUrdu', x: 500, y: 265, type: 'text', size: 28, font: 'bold 28px "Noto Nastaliq Urdu"', align: 'right' },
+                { id: 'nameEng', x: 295, y: 295, type: 'text', size: 22, font: 'bold 22px "Arimo"', align: 'left' },
+                { id: 'fatherUrdu', x: 500, y: 405, type: 'text', size: 24, font: 'bold 24px "Noto Nastaliq Urdu"', align: 'right' },
+                { id: 'fatherEng', x: 295, y: 435, type: 'text', size: 19, font: 'bold 19px "Arimo"', align: 'left' },
+                { id: 'cnicNum', x: 295, y: 575, type: 'text', size: 32, font: 'bold 32px "Arimo"', align: 'left' },
+                { id: 'dob', x: 532, y: 575, type: 'text', size: 18, font: 'bold 18px "Arimo"', align: 'left' },
+                { id: 'issue', x: 295, y: 610, type: 'text', size: 17, font: 'bold 17px "Arimo"', align: 'left' },
+                { id: 'expiry', x: 532, y: 610, type: 'text', size: 17, font: 'bold 17px "Arimo"', align: 'left' },
+                { id: 'mainPhoto', x: 732, y: 155, w: 188, h: 230, type: 'image', asset: 'photo' },
+                { id: 'ghostPhoto', x: 520, y: 450, w: 90, h: 110, type: 'image', asset: 'photo', alpha: 0.35 },
+                { id: 'signature', x: 740, y: 495, w: 150, h: 60, type: 'image', asset: 'sig' }
+            ],
+            back: [
+                { id: 'serialNum', x: 70, y: 50, type: 'text', size: 22, font: 'bold 22px "Arimo"', align: 'left' },
+                { id: 'cnicNumBack', x: 505, y: 560, type: 'text', size: 28, font: 'bold 28px "Arimo"', align: 'center' },
+                { id: 'presentAddr', x: 915, y: 220, type: 'multiline', size: 20, font: 'bold 20px "Noto Nastaliq Urdu"', align: 'right', width: 600 },
+                { id: 'permanentAddr', x: 915, y: 380, type: 'multiline', size: 20, font: 'bold 20px "Noto Nastaliq Urdu"', align: 'right', width: 600 },
+                { id: 'backGhost', x: 732, y: 380, w: 110, h: 140, type: 'image', asset: 'photo', alpha: 0.30 },
+                { id: 'chairSignature', x: 100, y: 500, w: 160, h: 70, type: 'image', asset: 'chairSig' }
+            ]
+        };
+
+        function init() {
+            canvas.width = CW; canvas.height = CH;
+            loadDefaultTemplates();
+            attachEvents();
+            requestAnimationFrame(renderLoop);
+        }
+
+        async function loadDefaultTemplates() {
+            const status = document.getElementById('autoLoadStatus');
+            const loadImg = (src) => new Promise((res, rej) => {
+                const img = new Image();
+                img.onload = () => res(img);
+                img.onerror = () => rej();
+                img.src = src;
+            });
+            try {
+                images.bgFront = await loadImg('./front.png');
+                images.bgBack = await loadImg('./back.png');
+                status.innerText = "Templates Active";
+                status.classList.replace('text-slate-500', 'text-green-500');
+                state.needsRedraw = true;
+            } catch (e) {
+                status.innerText = "Manual Upload Required";
+            }
+        }
+
+        function syncCnic() {
+            document.getElementById('cnicNumBack').value = document.getElementById('cnicNum').value;
+            state.needsRedraw = true;
+        }
+
+        function attachEvents() {
+            canvas.addEventListener('mousedown', e => {
+                const pos = getMousePos(e);
+                let found = null;
+                [...elements[currentSide]].reverse().forEach(el => {
+                    if (found) return;
+                    const hit = getHitBox(el);
+                    if (pos.x >= hit.x && pos.x <= hit.x + hit.w && pos.y >= hit.y && pos.y <= hit.y + hit.h) found = el;
+                });
+                state.selected = found;
+                if (found) {
+                    state.dragging = found;
+                    state.offset = { x: pos.x - found.x, y: pos.y - found.y };
+                    showControls(found);
+                } else { hideControls(); }
+                state.needsRedraw = true;
+            });
+
+            window.addEventListener('mousemove', e => {
+                const pos = getMousePos(e);
+                if (state.dragging) {
+                    state.dragging.x = pos.x - state.offset.x;
+                    state.dragging.y = pos.y - state.offset.y;
+                    state.needsRedraw = true;
+                }
+                let hover = false;
+                elements[currentSide].forEach(el => {
+                    const hit = getHitBox(el);
+                    if (pos.x >= hit.x && pos.x <= hit.x + hit.w && pos.y >= hit.y && pos.y <= hit.y + hit.h) hover = true;
+                });
+                canvas.style.cursor = state.dragging ? 'grabbing' : (hover ? 'move' : 'default');
+            });
+
+            window.addEventListener('mouseup', () => state.dragging = null);
+            document.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', () => state.needsRedraw = true));
+
+            handleFile('bgInput', img => { if(currentSide === 'front') images.bgFront = img; else images.bgBack = img; });
+            handleFile('photoInput', img => images.photo = img);
+            handleFile('sigInput', img => images.sig = img);
+            handleFile('chairSigInput', img => images.chairSig = img);
+        }
+
+        function getHitBox(el) {
+            if (el.type === 'image') return { x: el.x, y: el.y, w: el.w, h: el.h };
+            ctx.font = el.font;
+            const text = document.getElementById(el.id)?.value || "";
+            const metrics = ctx.measureText(text);
+            const w = (el.width || metrics.width) + 30;
+            const h = el.size + 15;
+            let x = el.x;
+            if (el.align === 'right') x = el.x - w; else if (el.align === 'center') x = el.x - w/2;
+            return { x, y: el.y - h + 10, w, h };
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return { x: (e.clientX - rect.left) * (CW / rect.width), y: (e.clientY - rect.top) * (CH / rect.height) };
+        }
+
+        function handleFile(id, cb) {
+            const input = document.getElementById(id);
+            if(!input) return;
+            input.onchange = e => {
+                const reader = new FileReader();
+                reader.onload = ev => { const img = new Image(); img.onload = () => { cb(img); state.needsRedraw = true; }; img.src = ev.target.result; };
+                reader.readAsDataURL(e.target.files[0]);
+            };
+        }
+
+        function showControls(el) {
+            const ctrl = document.getElementById('textControls');
+            ctrl.style.opacity = '1'; ctrl.style.pointerEvents = 'auto';
+            const val = el.size || el.w;
+            document.getElementById('activeSizeRange').value = val;
+            document.getElementById('activeSizeNum').value = val;
+            document.getElementById('activeElName').innerText = el.id.replace(/([A-Z])/g, ' $1');
+        }
+
+        function hideControls() {
+            const ctrl = document.getElementById('textControls');
+            ctrl.style.opacity = '0'; ctrl.style.pointerEvents = 'none';
+        }
+
+        function updateSize(v) {
+            if (!state.selected) return;
+            const el = state.selected;
+            const val = parseInt(v) || 5;
+            if (el.type === 'image') { const ratio = el.h / el.w; el.w = val; el.h = el.w * ratio; }
+            else { el.size = val; el.font = el.font.replace(/\d+px/, val + 'px'); }
+            document.getElementById('activeSizeRange').value = val;
+            document.getElementById('activeSizeNum').value = val;
+            state.needsRedraw = true;
+        }
+
+        function switchSide(s) {
+            currentSide = s;
+            document.getElementById('tabFront').classList.toggle('active', s === 'front');
+            document.getElementById('tabBack').classList.toggle('active', s === 'back');
+            document.getElementById('frontInfo').classList.toggle('hidden', s !== 'front');
+            document.getElementById('backInfo').classList.toggle('hidden', s !== 'back');
+            state.selected = null; hideControls(); state.needsRedraw = true;
+        }
+
+        function renderLoop() { if (state.needsRedraw) { draw(); state.needsRedraw = false; } requestAnimationFrame(renderLoop); }
+
+        function draw() {
+            ctx.clearRect(0, 0, CW, CH);
+            const bg = currentSide === 'front' ? images.bgFront : images.bgBack;
+            if (bg) ctx.drawImage(bg, 0, 0, CW, CH);
+            else { ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 0, CW, CH); }
+
+            elements[currentSide].forEach(el => {
+                ctx.save();
+                if (el.type === 'text' || el.type === 'multiline') {
+                    const val = document.getElementById(el.id)?.value || "";
+                    ctx.fillStyle = '#111'; ctx.font = el.font; ctx.textAlign = el.align;
+                    if (el.type === 'multiline') {
+                        let y = el.y;
+                        val.split(' ').reduce((line, word) => {
+                            if (ctx.measureText(line + word).width > el.width) { ctx.fillText(line, el.x, y); y += el.size * 1.4; return word + ' '; }
+                            return line + word + ' ';
+                        }, '').split('\n').forEach(l => ctx.fillText(l, el.x, y));
+                    } else ctx.fillText(val, el.x, el.y);
+                } else if (el.type === 'image') {
+                    let img = null;
+                    if (el.asset === 'photo') img = images.photo;
+                    if (el.asset === 'sig') img = images.sig;
+                    if (el.asset === 'chairSig') img = images.chairSig;
+
+                    if (img) {
+                        if (el.alpha) ctx.globalAlpha = el.alpha;
+                        if (el.asset === 'photo') ctx.filter = 'grayscale(100%) contrast(1.1)';
+                        ctx.drawImage(img, el.x, el.y, el.w, el.h);
+                    }
+                }
+                if (state.selected === el) {
+                    const hit = getHitBox(el);
+                    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+                    ctx.strokeRect(hit.x, hit.y, hit.w, hit.h);
+                }
+                ctx.restore();
+            });
+        }
+
+        function downloadCard() {
+            state.selected = null; draw();
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.download = `JAWAD_STUDIO_${currentSide}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+            }, 100);
+        }
+    </script>
+</body>
+</html>
